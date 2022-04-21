@@ -1,0 +1,29 @@
+{
+  "name": "reviews_api",
+  "version": "1.0.0",
+  "description": "RESTful API utilizing Postgres to serve up review information to SuperNova retail",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "serve": "nodemon app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sdc5-chicago/Reviews-API.git"
+  },
+  "author": "lucasbonner",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sdc5-chicago/Reviews-API/issues"
+  },
+  "homepage": "https://github.com/sdc5-chicago/Reviews-API#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.17.3",
+    "node-postgres": "^0.6.2",
+    "pg": "^8.7.3"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.15"
+  }
+}
