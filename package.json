@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/sdc5-chicago/Reviews-API#readme",
   "dependencies": {
+    "bluebird": "^3.7.2",
     "cors": "^2.8.5",
     "express": "^4.17.3",
     "node-postgres": "^0.6.2",

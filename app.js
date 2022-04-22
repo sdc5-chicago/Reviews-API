@@ -11,6 +11,10 @@ app.get('/', (request, response) => {
   response.json({ info: 'Node.js, Express, and Postgres API' });
 });
 
+// app.post('reviews/:id', db.postByUserId);
+
+app.get('/reviews/:id/meta', db.getReviewMeta);
+
 app.get('/reviews/:id', db.getUserById);
 
 app.listen(port, () => {
