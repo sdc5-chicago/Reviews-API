@@ -9,18 +9,24 @@ const pool = new Pool({
   port: 5432,
 });
 
-const postByUserId = (request, response) => {
 
-}
-
-const getUserById = (request, response) => {
+const getReviewById = (request, response) => {
   const id = parseInt(request.params.id);
 
-  pool.query('SELECT * FROM reviews WHERE id = $1', [id], (error, results) => {
+  pool.query(
+    `SELECT rv.id AS review_id, rating, summary, recommend, response, body, date, reviewer_name, helpfulness,
+      jsonb_agg(jsonb_build_object(rp.id, rp.url))
+      FROM reviews AS rv
+      INNER JOIN review_photos AS rp ON rp.review_id = rv.id
+      WHERE rv.product_id = $1
+      GROUP BY rv.id;`, [id], (error, results) => {
     if (error) {
       throw error
     }
-    response.status(200).send(JSON.stringify(results.rows));
+    let obj = {'product_id': id}
+    obj['results'] = results.rows;
+    console.log(obj);
+    response.status(200).send(JSON.stringify(obj));
   });
 }
 
@@ -41,7 +47,6 @@ const buildMeta = (resultObj, id) =>  {
         throw error
       }
 
-      resolve(results.rows);
       let characteristics = {};
       results.rows.forEach((row) => {
         resultObj['ratings'][row['rating']] = parseInt(row.ratings);
@@ -68,7 +73,7 @@ const buildMeta = (resultObj, id) =>  {
       }
 
       resultObj.characteristics = characteristics;
-      console.log('resultObj', resultObj);
+      resolve(resultObj);
 
     });
   })
@@ -82,16 +87,12 @@ const getReviewMeta = (request, response) => {
   let resultObj = {'product_id': id, 'ratings': {}, 'recommended': {}, 'characteristics': {} };
   buildMeta(resultObj, id)
     .then((result) => {
-      console.log('here');
-      // console.log(result);
-      // resultObj = result;
+      response.status(200).send(JSON.stringify(result))
     });
-
 }
 
 module.exports = {
-  getUserById,
+  getReviewById,
   getReviewMeta,
-  postByUserId,
 }
 
