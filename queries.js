@@ -25,7 +25,12 @@ const getReviewByProductId = (request, response) => {
     }
     let obj = {'product_id': id}
 
+    results.rows.forEach((row) => {
+      row['date'] = new Date(Number(row['date']));
+    })
+
     obj['results'] = results.rows;
+    console.log(obj)
     response.status(200).send(JSON.stringify(obj));
   });
 }
@@ -101,14 +106,18 @@ const reportReviewById = (request, response) => {
     }
     response.status(200).send(JSON.stringify(results));
   });
+}
 
-
-
+const postReviewById = (request, response) => {
+  const id = parseInt(request.params.id);
+  let values = {'id': id, ...request.body}
+  console.log(values);
 }
 
 module.exports = {
   getReviewByProductId,
   getReviewMeta,
   reportReviewById,
+  postReviewById,
 }
 
