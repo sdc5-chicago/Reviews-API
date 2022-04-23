@@ -50,6 +50,7 @@ const buildMeta = (resultObj, id) =>  {
     GROUP BY ch.product_id, chr.characteristic_id, ch.name, chr.value, reviews.rating, chr.review_id;`, [id], (error, results) => {
       if (error) {
         throw error
+        reject(error);
       }
 
       let characteristics = {};
@@ -108,10 +109,81 @@ const reportReviewById = (request, response) => {
   });
 }
 
+const addPhotos = (url) => {
+  const myPromise = new Promise((resolve, reject) => {pool.query(`INSERT INTO review_photos (review_id, url) VALUES ((SELECT max(id) FROM reviews), $1);`,
+  [url], (error, results) => {
+    if (error) {
+      reject(error);
+    }
+    resolve(results);
+  })});
+}
+
+const addCharacteristics = (characteristic_id, value) => {
+  const myPromise = new Promise((resolve, reject) => {pool.query(`INSERT INTO characteristic_reviews (characteristic_id, review_id, value) VALUES ($1, (SELECT max(id) FROM reviews), $2);`,
+  [characteristic_id, value], (error, results) => {
+    if (error) {
+      reject(error);
+    }
+    resolve(results);
+  })});
+}
+
 const postReviewById = (request, response) => {
   const id = parseInt(request.params.id);
-  let values = {'id': id, ...request.body}
-  console.log(values);
+  let values = {'product_id': id, ...request.body}
+  values['date'] = new Date;
+
+  const {
+    product_id,
+    rating,
+    summary,
+    body,
+    recommend,
+    name,
+    email,
+    photos,
+    characteristics,
+  } = values;
+
+  let promises = [];
+
+  const myPromise = new Promise((resolve, reject) => {pool.query(
+    `INSERT INTO reviews (product_id, rating, summary, body, recommend, reviewer_name, reviewer_email) VALUES ($1, $2, $3, $4, $5, $6, $7);`,
+    [ product_id,
+      rating,
+      summary,
+      body,
+      recommend,
+      name,
+      email,], (error, results) => {
+    if (error) {
+      throw error
+      reject(error);
+    }
+    resolve(results);
+    response.status(200).send(JSON.stringify(results));
+  })});
+
+  promises.push(myPromise);
+
+  if (photos.length !== 0) {
+    photos.forEach((url) => {
+      promises.push(addPhotos(url));
+    });
+  }
+
+  if (Object.keys(characteristics).length !== 0) {
+    for (let prop in characteristics) {
+      promises.push(addCharacteristics(prop, characteristics[prop]));
+    }
+  }
+
+  Promise.all(promises)
+    .then((result) => {
+      console.log('worked');
+    });
+
 }
 
 module.exports = {
