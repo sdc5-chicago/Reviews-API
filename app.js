@@ -11,9 +11,12 @@ app.get('/', (request, response) => {
   response.json({ info: 'Node.js, Express, and Postgres API' });
 });
 
+
 app.get('/reviews/:id/meta', db.getReviewMeta);
 
-app.get('/reviews/:id', db.getReviewById);
+app.get('/reviews/:id', db.getReviewByProductId);
+
+app.post('/reviews/report/:reviewId', db.reportReviewById);
 
 app.listen(port, () => {
   console.log(`Listening on ${port}`);

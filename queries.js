@@ -10,12 +10,12 @@ const pool = new Pool({
 });
 
 
-const getReviewById = (request, response) => {
+const getReviewByProductId = (request, response) => {
   const id = parseInt(request.params.id);
 
   pool.query(
     `SELECT rv.id AS review_id, rating, summary, recommend, response, body, date, reviewer_name, helpfulness,
-      jsonb_agg(jsonb_build_object(rp.id, rp.url))
+      jsonb_agg(jsonb_build_object(rp.id, rp.url)) AS photos
       FROM reviews AS rv
       INNER JOIN review_photos AS rp ON rp.review_id = rv.id
       WHERE rv.product_id = $1
@@ -24,8 +24,8 @@ const getReviewById = (request, response) => {
       throw error
     }
     let obj = {'product_id': id}
+
     obj['results'] = results.rows;
-    console.log(obj);
     response.status(200).send(JSON.stringify(obj));
   });
 }
@@ -91,8 +91,24 @@ const getReviewMeta = (request, response) => {
     });
 }
 
+const reportReviewById = (request, response) => {
+  const reviewId = parseInt(request.params.reviewId); //product_id
+
+  pool.query(
+    `UPDATE reviews SET reported = true WHERE id = $1;`, [reviewId], (error, results) => {
+    if (error) {
+      throw error
+    }
+    response.status(200).send(JSON.stringify(results));
+  });
+
+
+
+}
+
 module.exports = {
-  getReviewById,
+  getReviewByProductId,
   getReviewMeta,
+  reportReviewById,
 }
 
