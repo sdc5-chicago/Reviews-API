@@ -149,7 +149,6 @@ const markReviewAsHelpfulById = (request, response) => {
     if (error) {
       throw error
     }
-    console.log(results);
     response.status(200).send(JSON.stringify(results));
   });
 }
