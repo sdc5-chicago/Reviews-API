@@ -18,6 +18,8 @@ app.get('/reviews/:id', db.getReviewByProductId);
 
 app.post('/reviews/report/:reviewId', db.reportReviewById);
 
+app.post('/reviews/:reviewId/helpful', db.markReviewAsHelpfulById)
+
 app.post('/reviews/:id', db.postReviewById);
 
 app.listen(port, () => {

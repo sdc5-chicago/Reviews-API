@@ -14,10 +14,8 @@ const getReviewByProductId = (request, response) => {
   const id = parseInt(request.params.id);
 
   pool.query(
-    `SELECT rv.id AS review_id, rating, summary, recommend, response, body, date, reviewer_name, helpfulness,
-      jsonb_agg(jsonb_build_object(rp.id, rp.url)) AS photos
+    `SELECT rv.id AS review_id, rating, summary, recommend, response, body, date, reviewer_name, helpfulness
       FROM reviews AS rv
-      INNER JOIN review_photos AS rp ON rp.review_id = rv.id
       WHERE rv.product_id = $1
       GROUP BY rv.id;`, [id], (error, results) => {
     if (error) {
@@ -25,19 +23,53 @@ const getReviewByProductId = (request, response) => {
     }
     let obj = {'product_id': id}
 
-    results.rows.forEach((row) => {
-      row['date'] = new Date(Number(row['date']));
-    })
 
-    obj['results'] = results.rows;
-    console.log(obj)
-    response.status(200).send(JSON.stringify(obj));
+    let photoArrs = addPhotosToReviews(id);
+    photoArrs
+      .then((result) => {
+        let photoObj = {};
+
+        result.rows.forEach((obj) => {
+          let reviewId = obj['id'];
+          let photos = obj['photos'];
+
+          photoObj[reviewId] = photos;
+        });
+
+        results.rows.forEach((row) => {
+          row['date'] = new Date(Number(row['date']));
+
+          if (photoObj[row.review_id]) {
+            row['photos'] = photoObj[row.review_id];
+          } else {
+            row['photos'] = [];
+          }
+        });
+        // console.log(results.rows);
+        obj['results'] = results.rows;
+
+        response.status(200).send(JSON.stringify(obj));
+      })
   });
 }
 
-const buildRating = (id) => {
-
+const addPhotosToReviews = (id) => {
+  const myPromise = new Promise((resolve, reject) => {
+    pool.query(
+      `SELECT rv.id, jsonb_agg(jsonb_build_object('id', rp.id, 'url', rp.url)) AS photos
+      FROM reviews AS rv
+      INNER JOIN review_photos AS rp ON rp.review_id = rv.id
+      WHERE rv.product_id = $1
+      GROUP BY rv.id;`, [id], (error, results) => {
+        if (error) {
+          reject(error);
+        }
+        resolve(results);
+      });
+    });
+  return myPromise;
 }
+
 
 const buildMeta = (resultObj, id) =>  {
   const myPromise = new Promise((resolve, reject) => {
@@ -109,6 +141,19 @@ const reportReviewById = (request, response) => {
   });
 }
 
+const markReviewAsHelpfulById = (request, response) => {
+  const reviewId = parseInt(request.params.reviewId);
+
+  pool.query(
+    `UPDATE reviews SET helpfulness = helpfulness + 1 WHERE id = $1;`, [reviewId], (error, results) => {
+    if (error) {
+      throw error
+    }
+    console.log(results);
+    response.status(200).send(JSON.stringify(results));
+  });
+}
+
 const addPhotos = (url) => {
   const myPromise = new Promise((resolve, reject) => {pool.query(`INSERT INTO review_photos (review_id, url) VALUES ((SELECT max(id) FROM reviews), $1);`,
   [url], (error, results) => {
@@ -147,16 +192,18 @@ const postReviewById = (request, response) => {
   } = values;
 
   let promises = [];
+  let date = Date.now();
 
   const myPromise = new Promise((resolve, reject) => {pool.query(
-    `INSERT INTO reviews (product_id, rating, summary, body, recommend, reviewer_name, reviewer_email) VALUES ($1, $2, $3, $4, $5, $6, $7);`,
+    `INSERT INTO reviews (product_id, rating, summary, body, recommend, reviewer_name, reviewer_email, date) VALUES ($1, $2, $3, $4, $5, $6, $7, $8);`,
     [ product_id,
       rating,
       summary,
       body,
       recommend,
       name,
-      email,], (error, results) => {
+      email,
+      date, ], (error, results) => {
     if (error) {
       throw error
       reject(error);
@@ -181,15 +228,18 @@ const postReviewById = (request, response) => {
 
   Promise.all(promises)
     .then((result) => {
-      console.log('worked');
+      console.log(`posted review ${id} successfully`);
     });
 
 }
+
+
 
 module.exports = {
   getReviewByProductId,
   getReviewMeta,
   reportReviewById,
   postReviewById,
+  markReviewAsHelpfulById,
 }
 
