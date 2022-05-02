@@ -2,11 +2,10 @@ var Promise = require("bluebird");
 const Pool = require('pg').Pool
 
 const pool = new Pool({
-  user: '',
-  host: 'localhost',
-  database: 'sdc',
-  password: '',
-  port: 5432,
+  user: 'postgres',
+  host: '3.136.43.230',
+  database: 'postgres',
+  password: '1337',
 });
 
 
@@ -17,7 +16,7 @@ const getReviewByProductId = (request, response) => {
     `SELECT rv.id AS review_id, rating, summary, recommend, response, body, date, reviewer_name, helpfulness
       FROM reviews AS rv
       WHERE rv.product_id = $1
-      GROUP BY rv.id;`, [id], (error, results) => {
+      GROUP BY rv.id, rv.rating, rv.summary, rv.recommend, rv.response, rv.body, rv.date, rv. reviewer_name, rv.helpfulness;`, [id], (error, results) => {
     if (error) {
       throw error
     }

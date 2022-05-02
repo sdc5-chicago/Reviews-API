@@ -1,0 +1,14 @@
+node_modules/
+
+# package-lock.json
+package-lock.json
+
+# yarn-lock
+yarn.lock
+
+#ds store
+.DS_STORE
+
+
+#bundle.js
+public/bundle.js

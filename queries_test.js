@@ -17,7 +17,7 @@ export let options = {
   }
 };
 
-const URL = 'http://localhost:5000';
+const URL = 'http://3.129.29.37:5000';
 
 
 export default () => {
